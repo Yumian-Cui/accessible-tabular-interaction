@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>replit</title>
+  <link href="style.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.1.0/styles/ag-grid.css" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@29.1.0/styles/ag-theme-alpine.css" />
+</head>
+
+<body>
+  <script>var __basePath = './';</script>
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@29.1.0/dist/ag-grid-community.min.js"></script>
+  <script src="script.js"></script>
+  <div class="data-exploration" id="dataExplorer">
+    <p id="summary" aria-live="polite">This table contains data about colleges in America. To enter the table, press tab key. Navigate the table
+      with the arrow keys and press the question mark (or forward slash) key for recommendations about next steps.
+    </p>
+    <p id="filter-print" aria-live="polite"></p>
+  </div>
+  <div class="ag-theme-alpine" id="mainTable"></div>
+
+  <!--
+  This script places a badge on your repl's full-browser view back to your repl's cover
+  page. Try various colors for the theme: dark, light, red, orange, yellow, lime, green,
+  teal, blue, blurple, magenta, pink!
+  -->
+  <script src="https://replit.com/public/js/replit-badge.js" theme="blue" defer></script>
+</body>
+
+</html>
+
