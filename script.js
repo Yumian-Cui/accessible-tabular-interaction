@@ -10,9 +10,10 @@ class FocusedCell {
 }
 
 keys = []; //stores bools for each keyCode - true if the key is down, false if it's up
-traceKeys = []; // contain the {left, up, right} key codes visited 
+traceKeys = []; // contain the {left, up, right} key codes visited, 37, 38, 39
 focusStack = [];
 tempfocusStack = [];
+lastVisitedKey = false;
 recPress = 0;
 tabPress = 0;
 addFocus = true;
@@ -79,16 +80,18 @@ const gridOptions = {
 //returns column object of selected cell
 function getColumn() {
   el = gridOptions.api.getFocusedCell();
-  if (el == null) {
-    var col = gridOptions.columnApi.getColumn(defaultHeader);
-    header = true;
-    onColHeader = true;
-    return col;
-  }
+  // if (el == null) {
+  //   var col = gridOptions.columnApi.getColumn(defaultHeader);
+  //   header = true;
+  //   onColHeader = true;
+  //   return col;
+  // }
   // console.log("is el available?" + );
   // console.log("header: " + header.column.getId());
   // console.log("onColHeader: " + onColHeader);
   // console.log("keys[38]: " + keys[38]);
+  // console.log("getColumn header: " + header);
+  // console.log("getColumn onColHeader: " + onColHeader);
   if (header && onColHeader) { // now the system will be able to recognize if the user focused on header cell
     //  console.log("hiii");
     if (keys[38]) { //keys38-> arrow up, BUG 2 + BUG 3, new bug, when focus is already on col header, and call getColumn() will return last visited column header
@@ -98,7 +101,8 @@ function getColumn() {
 
     var keyCode = traceKeys[traceKeys.length - 1];
     // console.log(keyCode);
-    // console.log(header.column);
+    // console.log("getColumn header.column: " + header.column.getId());
+    // console.log("getColumn tempfocusStack[0]: " + tempfocusStack[0]);
     return (keyCode == 37 || keyCode == 39) ? header.column : tempfocusStack[0]; // BUG9
   }
 
@@ -166,107 +170,116 @@ onkeydown = function KeyPress(e) {
   if ([37, 38, 39].includes(e.keyCode)) { // BUG9
     traceKeys.push(e.keyCode);
   }
+  lastVisitedKey = e.keyCode;
   focusedCell = gridOptions.api.getFocusedCell();
 
-  // console.log(gridOptions.api.getFilterModel());
-  console.log(onColHeader);
-  if (onColHeader && tabPress != 0) {
-    if (!keys[88]) { // NOT key x
-      var focusedHeader = new FocusedCell(null, defaultHeader.slice(-1), null, true);
-      var prevCell = focusStack.pop();
+  if (tabPress) {
+    // console.log(gridOptions.api.getFilterModel());
+    // console.log(onColHeader);
+    // if (onColHeader) {
+    //   if (!keys[88]) { // NOT key x
+    //     var focusedHeader = new FocusedCell(null, defaultHeader.slice(-1), null, true);
+    //     var prevCell = focusStack.pop();
 
-      if (focusedHeader == prevCell) {
-        focusStack.push(prevCell);
-      } else {
-        console.log("visited header " + defaultHeader.slice(-1));
-        console.log("prevCell:", prevCell);
-        focusStack.push(prevCell);
-        focusStack.push(focusedHeader);
-        console.log("focusStack:", focusStack);
-      }
+    //     if (focusedHeader == prevCell) {
+    //       focusStack.push(prevCell);
+    //     } else {
+    //       console.log("visited header " + defaultHeader.slice(-1));
+    //       console.log("prevCell:", prevCell);
+    //       focusStack.push(prevCell);
+    //       focusStack.push(focusedHeader);
+    //       console.log("focusStack:", focusStack);
+    //     }
+    //   }
+    // }
+    // else {
+    //   console.log("on cell, row " + focusedCell.rowIndex);
+    // }
+
+    // check for focus
+    //if (headerCells.contains(document.activeElement)) {
+    //  console.log("header focused");
+    //}
+
+    //  for (let i = 0; i < headerCells.length; i++) {
+    //    if (headerCells[i] = document.activeElement && !document.activeElement.classList.contains("ag-cell")) {
+    //       console.log("in header " + i);
+    //   }
+    // }
+    focusedCell = gridOptions.api.getFocusedCell();
+
+    // console.log("document.activeElement.id", document.activeElement.id);
+    // 38 -> arrow up
+    if (keys[38] && focusedCell && focusedCell.rowIndex == 0) {
+      // rec = false;
+      console.log("moving to header");
+      onColHeader = true;
+    }
+    //ctrl+alt+s -> sort function
+    if (keys[83]) {
+      rec = false;
+      //alert("sort");
+      col = getColumn();
+      // keys = [];
+      sortColumn(col);
+    }
+    //ctrl+alt+f -> filter function
+    //if (keys[70] && keys[17] && keys[18]) {
+    if (keys[70]) {
+      rec = false;
+      setFilterInputQuery(); //https://docs.google.com/document/d/1CV_vjZPCS9wFuYEabKstFX_SrfbneTc5TqK11S1gMh0/edit
+      // updateFilterByQuery(query);
+      //resets keys - onkeyup doesn't register w popups
+
+      //TODO: filter col by query
+      keys = [];
+    }
+    
+    //ctrl+alt+z -> reset filters
+    if (keys[90]) {
+      rec = false;
+      resetFilters();
+      keys = [];
+    }
+    
+    //ctrl+alt+x -> WHAT does this do? TODO
+    if (keys[88]) {
+      addDropdown = false;
+      document.activeElement?.blur();
+
+      changeCellFocus();
+      keys = [];
+    }
+    
+    //"?" or forward slash -> recommendation
+    if (keys[191]) {
+      rec = true; // rec prepended to p tag
+      recPress = recPress + 1;
+      // printRecommendations();
+      keys = [];
+    }
+    
+    // u: to unlock and show the default per-column summary
+    if (keys[85]) {
+      rec = false;
+      removeStyle();
+      locked = [];
+      keys = [];
+    }
+
+    // lock key l?
+    if (keys[76]) {
+      rec = false;
+      lock(e);
+      keys = [];
     }
   }
-  // else {
-  //   console.log("on cell, row " + focusedCell.rowIndex);
-  // }
 
-  // check for focus
-  //if (headerCells.contains(document.activeElement)) {
-  //  console.log("header focused");
-  //}
 
-  //  for (let i = 0; i < headerCells.length; i++) {
-  //    if (headerCells[i] = document.activeElement && !document.activeElement.classList.contains("ag-cell")) {
-  //       console.log("in header " + i);
-  //   }
-  // }
-  focusedCell = gridOptions.api.getFocusedCell();
-
-  // console.log("document.activeElement.id", document.activeElement.id);
-  // 38 -> arrow up
-  if (keys[38] && focusedCell && focusedCell.rowIndex == 0) {
-    // rec = false;
-    console.log("moving to header");
-    onColHeader = true;
-  }
-  //ctrl+alt+s -> sort function
-  if (keys[83]) {
-    rec = false;
-    //alert("sort");
-    col = getColumn();
-    // keys = [];
-    sortColumn(col);
-  }
-  //ctrl+alt+f -> filter function
-  //if (keys[70] && keys[17] && keys[18]) {
-  if (keys[70]) {
-    rec = false;
-    setFilterInputQuery(); //https://docs.google.com/document/d/1CV_vjZPCS9wFuYEabKstFX_SrfbneTc5TqK11S1gMh0/edit
-    // updateFilterByQuery(query);
-    //resets keys - onkeyup doesn't register w popups
-
-    //TODO: filter col by query
-    keys = [];
-  }
-  
-  //ctrl+alt+z -> reset filters
-  if (keys[90]) {
-    rec = false;
-    resetFilters();
-    keys = [];
-  }
-  
-  //ctrl+alt+x -> WHAT does this do? TODO
-  if (keys[88]) {
-    addDropdown = false;
-    document.activeElement?.blur();
-
-    changeCellFocus();
-    keys = [];
-  }
-  
-  //"?" or forward slash -> recommendation
-  if (keys[191]) {
-    rec = true; // rec prepended to p tag
-    recPress = recPress + 1;
-    // printRecommendations();
-  }
-  
-  // u: to unlock and show the default per-column summary
-  if (keys[85]) {
-    rec = false;
-    removeStyle();
-    locked = [];
-  }
-
-  // lock key l?
-  if (keys[76]) {
-    rec = false;
-    lock(e);
-  }
   // tab key
   if (keys[9]) {
     tabPress = tabPress + 1;
+    keys = [];
   }
 }
 
@@ -298,14 +311,15 @@ function printRecommendations(e) {
   } else {
     // if locked status
     if (onColHeader) {
-      console.log("TEST:" + getColumn().getId());
+      console.log("You've locked: :" + locked);
+      console.log("TEST :" + getColumn().getId()); // THIS ONE NEEDS TO BE FIXED
       if (locked.includes(getColumn().getId()) && locked.length == 1) {
         recText += "Try: <br>1. Try moving to lock another column (except key column) by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>";// DEV, still need to be improved
         rec = false;
       }
       if (!locked.includes(getColumn().getId()) && locked.length == 1) {
         // recText += `You locked Column ${locked[0]}. Try locking the current or another column by pressing L and see what happens. <br>`; // DEV, still need to be improved
-        recText += `Try: <br>1. You locked Column ${locked[0]}. Try locking the current column ${getColumn().getId()} or another column by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
+        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. You locked Column ${locked[0]}. Try locking the current column ${getColumn().getId()} or another column by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
         rec = false;
       }
       if (locked.includes(getColumn().getId()) && locked.length == 2) {
@@ -463,6 +477,9 @@ function lock(e) {
   } catch (error) {
     var colName = defaultHeader[0];
   }
+  console.log(getColumn().getId());
+  console.log(defaultHeader[0]);
+  console.log("Try to lock: " + colName);
   var sum = document.getElementById('summary');
   if (headers[colName].key) {
     sum.innerHTML = `Key Column ${colName} can't be locked.`;
@@ -495,19 +512,39 @@ function lock(e) {
     }
     // lock();
   }
+  // return sum.innerHTML;
   // keys[e.keyCode] = false;
 }
 
 //=============== Functions for updating content in <p> tag ===============
+
+var tryLockKey;
+// var lastPTag;
 
 // Function for updating per-col summary
 // this function's logic needs optimization, now I have bunch of ifs here, not good programming practice lol
 onkeyup = function updatePTag(e) {
   var sum = document.getElementById('summary');
 
+  // before press tag key, press any other key will invoke init_rec TODO this is a temporary hotfix
+  if (tabPress == 0) {
+    sum.innerHTML = init_rec;
+    return;
+  }
+  if (sum.innerHTML.includes("can't be locked") && lastVisitedKey == 76) {
+    tryLockKey = true;
+    // lastPTag = sum.innerHTML;
+  }
+  // console.log(keys);
+  // if (lastVisitedKey == 76) {
+  //   sum.innerHTML = lock(e);
+  //   return;
+  // }
+
   if (!sum.innerHTML.includes(init_rec) || focusStack.length != 0) { // if initial rec has not been invoked OR focusStack is not empty
     if (focusStack.length != 0) {
-      sum.innerHTML = getPerColSummary();
+      // console.log("been here: " + getColumn().getId());
+      sum.innerHTML = getPerColSummary(getColumn().getId());
       // console.log("shouldn't be here")
     } else { // BUG 4
       if (defaultHeader.length != 1 || defaultHeader[0] == "College") { // BUG 4, hardcoding, change later BUG 8
@@ -529,7 +566,7 @@ onkeyup = function updatePTag(e) {
     // if (gridOptions.api.getFilterModel() != null) {
     //   sum.innerHTML += "Data is filtered. Press Z to clear filters.";
     //  }
-    console.log("rec: " + rec);
+    // console.log("rec: " + rec);
     if (rec) {
       //sum.insertAdjacentHTML('beforebegin', printRecommendations(e));
       // sum.innerHTML = printRecommendations(e) + sum.innerHTML;
@@ -551,32 +588,27 @@ onkeyup = function updatePTag(e) {
     }
   } else {
     // console.log("HERE");
-    
-    if (tabPress) {
-      sum.innerHTML = getPerColSummary(defaultHeader[defaultHeader.length - 1]); // BUG 4   
-    } else {
-      sum.innerHTML = tableSummary;
-      if (rec) sum.innerHTML = init_rec;
-    }
-    return; // return early
+  
+    sum.innerHTML = tabPress? getPerColSummary(defaultHeader[defaultHeader.length - 1]):rec? init_rec:tableSummary;
+    // return; // return early
   }
 
   updateFilterPrintout();
   keys[e.keyCode] = false;
+  tryLockKey = false;
 }
 
 // ==================== update column summary ====================
 
 function getPerColSummary(colName) {
-  if (!colName) {
-    if (header) {
-      colName = defaultHeader.slice(-1);
-    }
-    else {
-      var col = getColumn();
-      var colName = col.getId();
-    }
-  }
+  // if (!colName) {
+  //   if (header) {
+  //     colName = defaultHeader.slice(-1);
+  //   } else {
+  //     var col = getColumn();
+  //     var colName = col.getId();
+  //   }
+  // }
   var colType = headers[colName].dataType;
   var cellSummary = (onColHeader || headers[colName].key) ? "" : `${current_cell.rowName} has ${current_cell.colName} of ${current_cell.contents}.<br>`;
 
@@ -813,6 +845,12 @@ function updateKeySummary(colName, num) {
   var html = newSpace(`${colName} is a key column.`);
   html = html + newSpace(`${colName} has a count of ${num}.`);
   // headers[colName].summary = html;
+  // console.log("tryLockKey: " + tryLockKey);
+  if (tryLockKey) {
+    html = `Key Column ${colName} can't be locked.`;
+    // tryLockKey = false;
+    // console.log("tryLockKey2: " + tryLockKey);
+  }
   return html;
 }
 
