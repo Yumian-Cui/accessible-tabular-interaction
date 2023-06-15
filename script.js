@@ -273,6 +273,20 @@ onkeydown = function KeyPress(e) {
       lock(e);
       keys = [];
     }
+
+    // compare magic key, M/m, once pressed, begin comparison mode with the locked column
+    if (keys[77]) {
+      rec = false;
+      magic(e);
+      magicCount = 1;
+      keys = [];
+    }
+
+    if (!magicCount) { // if the user moves away from the last magic column, the blue format will disappear
+      removeStyle(locked[1]); 
+      locked.splice(1,1);
+    }
+
   }
 
 
@@ -311,24 +325,25 @@ function printRecommendations(e) {
   } else {
     // if locked status
     if (onColHeader) {
-      console.log("You've locked: :" + locked);
-      console.log("TEST :" + getColumn().getId()); // THIS ONE NEEDS TO BE FIXED
+      // console.log("You've locked: :" + locked);
+      // console.log("TEST :" + getColumn().getId()); // THIS ONE NEEDS TO BE FIXED
       if (locked.includes(getColumn().getId()) && locked.length == 1) {
-        recText += "Try: <br>1. Try moving to lock another column (except key column) by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>";// DEV, still need to be improved
+        // recText += "Try: <br>1. Try moving to lock another column (except key column) by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>";// DEV, still need to be improved
+        recText += header_key_rec; // 6/14/23 YMC DO NOT try to persuade the user move to another column to do something because we'd like avoiding multi-step
         rec = false;
       }
       if (!locked.includes(getColumn().getId()) && locked.length == 1) {
         // recText += `You locked Column ${locked[0]}. Try locking the current or another column by pressing L and see what happens. <br>`; // DEV, still need to be improved
-        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. You locked Column ${locked[0]}. Try locking the current column ${getColumn().getId()} or another column by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
+        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
         rec = false;
       }
       if (locked.includes(getColumn().getId()) && locked.length == 2) {
         // recText += "No further recommendations at this point. Unlock both columns by pressing U.<br>"; // DEV, still need to be improved
-        recText += `Try: <br>1. You locked Column ${locked[0]} and Column ${locked[1]}. Unlock both locked columns by pressing U.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`
+        recText += header_key_rec;
         rec = false;
       }
       if (!locked.includes(getColumn().getId()) && locked.length == 2) {
-        recText += "Try: <br>1. Unlock your previously locked two columns by pressing U before you can lock other columns.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>"; // DEV, still need to be improved
+        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
         rec = false;
       }
     } else {
@@ -353,6 +368,21 @@ function printRecommendations(e) {
   }
   // rec = false;
   return recText;
+}
+
+/**
+ * Given two columns, get a recommendation given their types
+ * @param {String} lockedCol 
+ * @param {String} currCol 
+ */
+function getLockedRec(lockedCol, currCol) {
+  var lockedNum = headers[lockedCol].dataType == "number";
+  var currNum = headers[currCol].dataType == "number";
+  var bothNums = `You've locked numerical column ${lockedCol}, Press M if you want to see the correlation between ${lockedCol} and ${currCol}.`;
+  var NumCat = `You've locked numerical column ${lockedCol}, Press M if you want to get a pivot table between ${lockedCol} and ${currCol}.`;
+  var bothCats = '';
+  var CatNum = `You've locked categorical column ${lockedCol}, Press M if you want to get a pivot table between ${lockedCol} and ${currCol}.`;
+  return lockedNum? (currNum? bothNums:NumCat):(currNum? CatNum:bothCats);
 }
 
 var defaultDatasetUrl = './assets/data/colleges.json';
@@ -447,7 +477,7 @@ function getColArray(colName, rows) {
   return rows.map(row => row[colName]);
 }
 
-//=============== Functions for lock/unlock ===============
+//=============== Functions for lock/unlock LOCK UNLOCK ===============
 
 function setColumnStyle(columnId, color, border) {
   var column = gridOptions.columnApi.getColumn(columnId);
@@ -458,25 +488,40 @@ function setColumnStyle(columnId, color, border) {
   headerElement.style.border = border; // '2px solid red'
 }
 
-function removeStyle() {
-  locked.forEach(function(column) {
-    setColumnStyle(column, '', '');
-  });
+function removeStyle(column) {
+  // locked.forEach(function(column) {
+  //   setColumnStyle(column, '', '');
+  // });
+  setColumnStyle(column, '', '');
 }
 
 function checkLocked(colName) {
+  return locked[0] == colName;
+}
+
+/**
+ * Check if a column is an "active" column being compared
+ * @param {String} colName 
+ * @returns 
+ */
+function checkActive(colName) {
   return locked.includes(colName);
 }
 
-var locked = []; // only allow at most two cols be stored at a time, if more is added, the original two will be deleted automatically
+var locked = []; // only allow at most two cols be stored at a time, if more is added, the original two will be deleted automatically // 6/14/23 YMC allow only one lock at a time
 // function to lock and also control the lock mode
 // var lockMode = false;
-function lock(e) {
+
+function getColName() {
   try {
     var colName = getColumn().getId();
   } catch (error) {
     var colName = defaultHeader[0];
   }
+  return colName;
+}
+function lock(e) {
+  var colName = getColName();
   console.log(getColumn().getId());
   console.log(defaultHeader[0]);
   console.log("Try to lock: " + colName);
@@ -490,30 +535,48 @@ function lock(e) {
     setColumnStyle(colName, 'yellow', '2px solid red');
     // headers[colName].lock = 1;
     sum.innerHTML = `Column ${colName} locked.`;
-  } else if (locked.length == 1) {
-    if (locked[0] != colName) { // to avoid press l twice (unintential user mistake)
-      locked.push(colName);
-      setColumnStyle(colName, 'yellow', '2px solid red');
-      sum.innerHTML = `Column ${locked[0]} and Column ${colName} locked.`; // now both columns locked  
-      // locked = []; // auto-unlock
-    } else {
-      sum.innerHTML = `Column ${colName} already locked.`;
-    }
-  } else { // if there're already 2 cols in locked
+  // } else if (locked.length == 1) {
+  //   if (locked[0] != colName) { // to avoid press l twice (unintential user mistake)
+  //     locked.push(colName);
+  //     setColumnStyle(colName, 'yellow', '2px solid red');
+  //     sum.innerHTML = `Column ${locked[0]} and Column ${colName} locked.`; // now both columns locked  
+  //     // locked = []; // auto-unlock
+  //   } else {
+  //     sum.innerHTML = `Column ${colName} already locked.`;
+  //   }
+  } else { // if there're already 2 cols in locked // 6/14/23 YMC if there's already one column locked
     // console.log(locked);
-    if (locked[1] != colName) {
-      sum.innerHTML = `Column ${locked[0]} and Column ${locked[1]} auto unlocked.`;
-      removeStyle();
+    if (locked[0] != colName) {
+      sum.innerHTML = `Column ${locked[0]} auto unlocked.`;
+      removeStyle(locked[0]);
       locked = []; // auto-unlock
       lock(e);
       // keys[e.keyCode] = false;
     } else {
-      sum.innerHTML = `Column ${locked[0]} and Column ${colName} already locked.`;
+      sum.innerHTML = `Column ${locked[0]} already locked.`;
     }
     // lock();
   }
   // return sum.innerHTML;
   // keys[e.keyCode] = false;
+}
+
+function magic(e) {
+  var colName = getColName();
+  var sum = document.getElementById('summary');
+  if (locked.length == 1) {
+    locked.push(colName);
+    setColumnStyle(colName, 'cyan', '2px solid red');
+  } else if (locked.length == 2) {
+    if (locked[1] != colName) {
+      sum.innerHTML = `Column ${locked[1]} auto removed from compare mode.`;
+      removeStyle(locked[1]);
+      locked.splice(1, 1); // pop out the compare element
+      magic(e);
+    } else {
+      sum.innerHTML = `Column ${locked[1]} already in compare mode.`;
+    }
+  }
 }
 
 //=============== Functions for updating content in <p> tag ===============
@@ -554,8 +617,9 @@ onkeyup = function updatePTag(e) {
         }
       }
     }
-    if (locked.length == 2 && (checkLocked(getColumn().getId()) && onColHeader)) { // meaning it's in lock (and compare mode) mode and users need to focus on locked column headers
+    if (locked.length == 2 && (checkActive(getColumn().getId()) && onColHeader && magicCount)) { // meaning it's in lock (and compare mode) mode and users need to focus on locked column headers
       sum.innerHTML = getBetweenColsSummary(locked[0], locked[1]);
+      magicCount = 0;
     }
     if (addDropdown) {
       sum.innerHTML = "No matching values found. ";
@@ -611,11 +675,15 @@ function getPerColSummary(colName) {
   // }
   var colType = headers[colName].dataType;
   var cellSummary = (onColHeader || headers[colName].key) ? "" : `${current_cell.rowName} has ${current_cell.colName} of ${current_cell.contents}.<br>`;
+  var suggestion = "";
+  if (locked.length == 1 && !headers[colName].key) {
+    suggestion = " " + getLockedRec(locked[0], colName);
+  }
 
   if (colType == "text") {
-    return cellSummary + updateTextSummary(colName);
+    return cellSummary + updateTextSummary(colName) + suggestion;
   } else if (colType == "number") {
-    return cellSummary + updateNumberSummary(colName);
+    return cellSummary + updateNumberSummary(colName) + suggestion;
   } else { // any other types not implemented
     return cellSummary + "data type not implemented yet";
   }
