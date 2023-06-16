@@ -19,15 +19,18 @@ tabPress = 0;
 addFocus = true;
 onColHeader = true;
 addDropdown = false;
+newDropdownList = true;
+dropdownMenuCode = "";
 var header; // the current focused header
 var rec = false;
 const headerCells = document.getElementsByClassName("ag-header-cell");
 var sum = document.getElementById('summary');
 //TODO CHANGE THIS
 var defaultHeader = ["College"]; // an array initialized with the first col name
-var current_cell = new FocusedCell("Abilene Christian University", "College", "Abilene Christian University");
+var current_cell = new FocusedCell("Abilene Christian University", "College", "Abilene Christian University", false);
 var tableSummary = tbDes + " To enter the table, press tab key. Navigate the table with the arrow keys and press the question mark (or forward slash) key for recommendations about next steps.";
 filteredColumns = [];
+
 
 /** 
 * table settings for ag-grid
@@ -109,7 +112,7 @@ function getColumn() {
   return el.column;
 }
 
-// what does this function do ???
+
 function changeCellFocus() {
   addFocus = false;
   cell = focusStack.pop();
@@ -176,22 +179,22 @@ onkeydown = function KeyPress(e) {
   if (tabPress) {
     // console.log(gridOptions.api.getFilterModel());
     // console.log(onColHeader);
-    // if (onColHeader) {
-    //   if (!keys[88]) { // NOT key x
-    //     var focusedHeader = new FocusedCell(null, defaultHeader.slice(-1), null, true);
-    //     var prevCell = focusStack.pop();
+     if (onColHeader) {
+       if (!keys[88]) { // NOT key x
+         var focusedHeader = new FocusedCell(null, defaultHeader.slice(-1), null, true);
+         var prevCell = focusStack.pop();
 
-    //     if (focusedHeader == prevCell) {
-    //       focusStack.push(prevCell);
-    //     } else {
-    //       console.log("visited header " + defaultHeader.slice(-1));
-    //       console.log("prevCell:", prevCell);
-    //       focusStack.push(prevCell);
-    //       focusStack.push(focusedHeader);
-    //       console.log("focusStack:", focusStack);
-    //     }
-    //   }
-    // }
+         if (focusedHeader == prevCell) {
+           focusStack.push(prevCell);
+         } else {
+           console.log("visited header " + defaultHeader.slice(-1));
+           console.log("prevCell:", prevCell);
+           focusStack.push(prevCell);
+           focusStack.push(focusedHeader);
+           console.log("focusStack:", focusStack);
+         }
+       }
+     }
     // else {
     //   console.log("on cell, row " + focusedCell.rowIndex);
     // }
@@ -245,6 +248,8 @@ onkeydown = function KeyPress(e) {
     //ctrl+alt+x -> WHAT does this do? TODO
     if (keys[88]) {
       addDropdown = false;
+      newDropdownList = true;
+      dropdownMenuCode = "";
       document.activeElement?.blur();
 
       changeCellFocus();
@@ -404,12 +409,12 @@ function refreshAttributes() {
     headers = housing_headers;
     defaultHeader = ["ID"];
     tbDes = "This table contains data about housing in the US.";
-    var current_cell = new FocusedCell("1", "ID", "1");
+    var current_cell = new FocusedCell("1", "ID", "1", false);
   } else if (datasetUrl.includes('sales.json')) {
     gridOptions.columnDefs = sales_columnDefs;
     headers = sales_headers;
     defaultHeader = ["ID"];
-    var current_cell = new FocusedCell("1", "ID", "1");
+    var current_cell = new FocusedCell("1", "ID", "1", false);
     tbDes = "This table contains data about coffee sales in the US.";
   } else {
     console.log("dataset not available.");
@@ -623,7 +628,7 @@ onkeyup = function updatePTag(e) {
     }
     if (addDropdown) {
       sum.innerHTML = "No matching values found. ";
-      sum.innerHTML += createDropdownMenu();
+      sum.innerHTML += dropdownMenuCode;
       sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
       document.getElementById("filterValues").focus();
     }
@@ -947,6 +952,11 @@ function setFilterInputQuery() {
   //let text = prompt("Filter by: ", "Public");
   if (onColHeader) {
     addDropdown = true;
+      if (newDropdownList) {
+          console.log("refreshing filter categories");
+    dropdownMenuCode = createDropdownMenu();
+          newDropdownList = false;
+      }
     return;
   }
 
@@ -1091,7 +1101,7 @@ function updateCatFilter(text, col) {
   resetFilter(col);
   const filterInstance = gridOptions.api.getFilterInstance(column);
   if (text === "All") {
-
+      return;
   }
   else {
     filterInstance.setModel({
@@ -1106,7 +1116,8 @@ function updateCatFilter(text, col) {
     // console.log("filtering " + text + " " + col);
   }
   sum.innerHTML = "Filtering on " + col + " by " + text + ". ";
-  sum.innerHTML += createDropdownMenu();
+    console.log("dropdown menu: " + newDropdownList)
+  sum.innerHTML += dropdownMenuCode;
   sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
   document.getElementById("filterValues").focus();
   return;
@@ -1157,7 +1168,7 @@ function updateNumFilter(text, col, quartiles) {
   start = rangeStart;
   end = rangeEnd;
   sum.innerHTML = "Filtering on " + col + " by " + text + ". ";
-  sum.innerHTML += createDropdownMenu();
+  sum.innerHTML += dropdownMenuCode;
   sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
   document.getElementById("filterValues").focus();
   return;
