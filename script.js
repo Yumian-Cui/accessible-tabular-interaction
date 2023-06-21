@@ -327,23 +327,24 @@ function printRecommendations(e) {
     if (onColHeader) {
       // console.log("You've locked: :" + locked);
       // console.log("TEST :" + getColumn().getId()); // THIS ONE NEEDS TO BE FIXED
+      // 6/21/23 YMC BELOW RECOMMENDATIONS NEED OPTIMIZATION TODO 6/21/23 L KEY to unlock the second time + add recommendation about locking and unlocking
       if (locked.includes(getColumn().getId()) && locked.length == 1) {
         // recText += "Try: <br>1. Try moving to lock another column (except key column) by pressing L and see what happens.<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>";// DEV, still need to be improved
-        recText += header_key_rec; // 6/14/23 YMC DO NOT try to persuade the user move to another column to do something because we'd like avoiding multi-step
+        recText += header_key_rec + "3. Unlock this column by pressing L.<br>"; // 6/14/23 YMC DO NOT try to persuade the user move to another column to do something because we'd like avoiding multi-step
         rec = false;
       }
       if (!locked.includes(getColumn().getId()) && locked.length == 1) {
         // recText += `You locked Column ${locked[0]}. Try locking the current or another column by pressing L and see what happens. <br>`; // DEV, still need to be improved
-        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
+        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>4. Lock current column by pressing L.<br>`; // DEV, still need to be improved
         rec = false;
       }
       if (locked.includes(getColumn().getId()) && locked.length == 2) {
         // recText += "No further recommendations at this point. Unlock both columns by pressing U.<br>"; // DEV, still need to be improved
-        recText += header_key_rec;
+        recText += header_key_rec + "3. Unlock this column by pressing L.<br>";
         rec = false;
       }
       if (!locked.includes(getColumn().getId()) && locked.length == 2) {
-        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>`; // DEV, still need to be improved
+        recText += (headers[getColumn().getId()].key)? header_key_rec:`Try: <br>1. ${getLockedRec(locked[0], getColumn().getId())}<br>2. Filter current column by pressing F.<br>3. Sort current column by pressing S.<br>4. Lock current column by pressing L.<br>`; // DEV, still need to be improved
         rec = false;
       }
     } else {
@@ -552,8 +553,10 @@ function lock(e) {
       locked = []; // auto-unlock
       lock(e);
       // keys[e.keyCode] = false;
-    } else {
-      sum.innerHTML = `Column ${locked[0]} already locked.`;
+    } else { // 6/21/23 L KEY to unlock the second time + add recommendation about locking and unlocking
+      sum.innerHTML = `Column ${locked[0]} unlocked.`;
+      removeStyle(locked[0]);
+      locked = []; // auto-unlock
     }
     // lock();
   }
@@ -676,9 +679,12 @@ function getPerColSummary(colName) {
   var colType = headers[colName].dataType;
   var cellSummary = (onColHeader || headers[colName].key) ? "" : `${current_cell.rowName} has ${current_cell.colName} of ${current_cell.contents}.<br>`;
   var suggestion = "";
-  if (locked.length == 1 && !headers[colName].key) {
+  console.log(locked);
+  console.log(locked.length);
+  if (locked.length == 1 && !headers[colName].key && !checkLocked(colName)) {
     suggestion = " " + getLockedRec(locked[0], colName);
   }
+  console.log("suggestion: " + suggestion);
 
   if (colType == "text") {
     return cellSummary + updateTextSummary(colName) + suggestion;
