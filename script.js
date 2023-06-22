@@ -1068,7 +1068,6 @@ function resetFilters() {
 
 function updateFilterPrintout() {
   var printout = document.getElementById('filter-print');
-  console.log(filteredColumns.length);
   if (filteredColumns.length === 0) {
     // if (!tabPress) return;
     printout.innerHTML = "No filters applied";
@@ -1099,8 +1098,10 @@ function createDropdownMenu() {
     htmlDropdown = htmlDropdown + `</select>`;
   }
   else {
-
-    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option>All</option><option>0-25 percentile</option><option>25-75 percentile</option><option>75-100 percentile</option>`;
+      //console.log("HELLO");
+      var numColArray = getColArray(colName);
+  var quartiles = getQuartileDict(numColArray);
+    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option value="All">All</option><option value='0-25'>Min - ${quartiles[25]}</option><option value='25-75'>${quartiles[25]} - ${quartiles[75]}</option><option value='75-100'>${quartiles[75]} - Max</option>`;
   }
   return htmlDropdown;
 }
@@ -1146,25 +1147,25 @@ function resetFilter(colName) {
 function updateNumFilter(text, col, quartiles) {
   var sum = document.getElementById('summary');
   resetFilter(col);
-  var numColArray = getColArray(col);
-  var quartiles = getQuartileDict(numColArray);
 
   if (text === "All") {
     return;
   }
+  var numColArray = getColArray(col);
+  var quartiles = getQuartileDict(numColArray);
   column = getColumn(col);
   rangeStart = 0;
   rangeEnd = 0;
   const filterInstance = gridOptions.api.getFilterInstance(column);
-  if (text === "0-25 percentile") {
+  if (text ==='0-25') {
     rangeStart = quartiles[0];
     rangeEnd = quartiles[25];
   }
-  if (text === "25-75 percentile") {
+  if (text === '25-75') {
     rangeStart = quartiles[25];
     rangeEnd = quartiles[75];
   }
-  if (text === "75-100 percentile") {
+  if (text === '75-100') {
     rangeStart = quartiles[75];
     rangeEnd = quartiles[100];
   }
