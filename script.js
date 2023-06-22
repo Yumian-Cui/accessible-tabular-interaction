@@ -129,9 +129,7 @@ function changeCellFocus() {
     gridOptions.api.setFocusedCell(rowNode.rowIndex, cell.colName);
 
     if (focusStack.length == 0) { // ??? 
-      //TODO CHANGE THIS 
       refreshAttributes();
-      //focusStack.push(new FocusedCell("Abilene Christian University", "College", "Abilene Christian University"));
     }
   }
 }
@@ -1051,13 +1049,19 @@ function updateFilterByQuery(query) {
   }
   // Tell grid to run filter operation again
   gridOptions.api.onFilterChanged();
-  filterCol = colName;
-  if (filteredColumns.indexOf(filterCol) === -1) filteredColumns.push(filterCol);
+  filterCol = column;
+    console.log("filtering on " + filterCol);
+  if (filteredColumns.indexOf(filterCol) === -1) {
+      filteredColumns.push(filterCol);
+      console.log(filteredColumns);
+      updateFilterPrintout();
+  }
   return;
 }
 
 function resetFilters() {
   filteredColumns = [];
+    updateFilterPrintout();
   addDropdown = false;
   gridOptions.api.setFilterModel(null);
 }
@@ -1117,7 +1121,10 @@ function updateCatFilter(text, col) {
     });
     gridOptions.api.onFilterChanged();
     filterCol = col;
-    if (filteredColumns.indexOf(filterCol) === -1) filteredColumns.push(filterCol);
+    if (filteredColumns.indexOf(filterCol) === -1) {
+        filteredColumns.push(filterCol);
+        updateFilterPrintout();
+    }
     queryText = text;
     // console.log("filtering " + text + " " + col);
   }
@@ -1169,8 +1176,11 @@ function updateNumFilter(text, col, quartiles) {
     filterTo: rangeEnd,
   });
   gridOptions.api.onFilterChanged();
-  filterCol = colName;
-  if (filteredColumns.indexOf(filterCol) === -1) filteredColumns.push(filterCol);
+  filterCol = col;
+  if (filteredColumns.indexOf(filterCol) === -1) {
+      filteredColumns.push(filterCol);
+      updateFilterPrintout();
+  }
   start = rangeStart;
   end = rangeEnd;
   sum.innerHTML = "Filtering on " + col + " by " + text + ". ";
