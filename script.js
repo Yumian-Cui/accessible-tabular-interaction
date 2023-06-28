@@ -628,9 +628,9 @@ onkeyup = function updatePTag(e) {
       magicCount = 0;
     }
     if (addDropdown) {
-      sum.innerHTML = "No matching values found. ";
+      sum.innerHTML = "Press space to select a filter. ";
       sum.innerHTML += dropdownMenuCode;
-      sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
+      sum.innerHTML += "Press X to return to the table.";
       document.getElementById("filterValues").focus();
     }
     // if (gridOptions.api.getFilterModel() != null) {
@@ -646,13 +646,13 @@ onkeyup = function updatePTag(e) {
 
     if (start && end && filterCol) {
       //sum.innerHTML = `The table has been filtered by ${filterCol} to show values within the range of ${start} and ${end}. Feel free to explore the table. To undo the filter, press z.`;
-      sum.innerHTML = `Filtering on ${filterCol} in the range of ${start} and ${end}. Feel free to explore the table. To undo the filter, press z.`;
+      sum.innerHTML = `Filtering on ${filterCol} in the range of ${start} and ${end}. Feel free to explore the table. To clear all filters, press Z.`;
       start = null;
       end = null;
       filterCol = null;
     }
     else if (queryText && filterCol) {
-      sum.innerHTML = `Filtering on ${filterCol} to show ${queryText}. Feel free to explore the table. To undo the filter, press z.`;
+      sum.innerHTML = `Filtering on ${filterCol} to show ${queryText}. Feel free to explore the table. To clear all filters, press Z.`;
       queryText = null;
       filterCol = null;
     }
@@ -721,7 +721,7 @@ function getCatNumColsSummary(col1, col2) {
     numCol = col1;
   }
   if (catCol === "College") {
-    return "Cannot create pivot table with this column. Press U to unlock and try different columns.";
+    return "Cannot create pivot table with this column. Navigate to another column and press M.";
   }
   // getCatCountMap(colArray)
   // getCatNums(countMap) 
@@ -1081,6 +1081,7 @@ function updateFilterPrintout() {
 
 function createDropdownMenu() {
   var col = getColumn();
+    resetFilter(col);
   var colName = col.getId();
   var test = 5;
   var htmlDropdown = "";
@@ -1101,7 +1102,7 @@ function createDropdownMenu() {
       //console.log("HELLO");
       var numColArray = getColArray(colName);
   var quartiles = getQuartileDict(numColArray);
-    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option value="All">All</option><option value='0-25'>Min - ${quartiles[25]}</option><option value='25-75'>${quartiles[25]} - ${quartiles[75]}</option><option value='75-100'>${quartiles[75]} - Max</option>`;
+    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option value="All">All</option><option value='0-25'>${quartiles[0]} - ${quartiles[25]}</option><option value='25-75'>${quartiles[25]} - ${quartiles[75]}</option><option value='75-100'>${quartiles[75]} - ${quartiles[100]}</option>`;
   }
   return htmlDropdown;
 }
@@ -1133,6 +1134,7 @@ function updateCatFilter(text, col) {
     console.log("dropdown menu: " + newDropdownList)
   sum.innerHTML += dropdownMenuCode;
   sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
+    document.getElementById("filterValues").value = text;
   document.getElementById("filterValues").focus();
   return;
 }
@@ -1184,9 +1186,10 @@ function updateNumFilter(text, col, quartiles) {
   }
   start = rangeStart;
   end = rangeEnd;
-  sum.innerHTML = "Filtering on " + col + " by " + text + ". ";
+  sum.innerHTML = "Filtering on " + col + " from " + rangeStart + " to " + rangeEnd + ". ";
   sum.innerHTML += dropdownMenuCode;
   sum.innerHTML += " Press space to select a filter category. Press X to return to the table.";
+    document.getElementById("filterValues").value = text;
   document.getElementById("filterValues").focus();
   return;
 }
