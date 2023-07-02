@@ -418,6 +418,7 @@ function refreshAttributes() {
   } else {
     console.log("dataset not available.");
   }
+
   document.getElementById('summary').innerHTML = tbDes + " To enter the table, press tab key. Navigate the table with the arrow keys and press the question mark (or forward slash) key for recommendations about next steps.";
 }
 
@@ -438,6 +439,10 @@ document.addEventListener('DOMContentLoaded', function() {
   fetch(datasetUrl)
     .then((response) => response.json())
     .then((data) => gridOptions.api.setRowData(data));
+  arr = document.getElementsByClassName("ag-header-cell");   
+  Array.from(arr).forEach((e) => {
+       e.setAttribute("aria-description", "");
+  });
 });
 
 
@@ -747,6 +752,8 @@ function getCatNumColsSummary(col1, col2) {
 
 
   return `Column ${col1} and Column ${col2} are locked.<br>` + `Below is a pivot table about the average and the range of ${numCol} by ${catCol}.<br>` + htmlTB + tbEnd();
+    
+  document.getElementById("pivotTable").focus();
 }
 
 // cite: https://stackoverflow.com/questions/29544371/finding-the-average-of-an-array-using-js
@@ -933,7 +940,7 @@ function updateKeySummary(colName, num) {
 
 // ==================== pivot table formatting ====================
 
-function tbStart() { return "<div><table class='pivot-table'>"; }
+function tbStart() { return "<div><table class='pivot-table' id='pivotTable'>"; }
 function tbEnd() { return "</table></div>"; }
 
 function createTBRow(elements) {
@@ -1102,7 +1109,7 @@ function createDropdownMenu() {
       //console.log("HELLO");
       var numColArray = getColArray(colName);
   var quartiles = getQuartileDict(numColArray);
-    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option value="All">All</option><option value='0-25'>${quartiles[0]} - ${quartiles[25]}</option><option value='25-75'>${quartiles[25]} - ${quartiles[75]}</option><option value='75-100'>${quartiles[75]} - ${quartiles[100]}</option>`;
+    htmlDropdown = htmlDropdown + `<select name='filterValues' id='filterValues' onChange='updateNumFilter(this.value,"${colName}");'><option value="All">All</option><option value='0-25'>${quartiles[0]} to ${quartiles[25]}</option><option value='25-75'>${quartiles[25]} to ${quartiles[75]}</option><option value='75-100'>${quartiles[75]} to ${quartiles[100]}</option>`;
   }
   return htmlDropdown;
 }
