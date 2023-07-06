@@ -301,7 +301,7 @@ onkeydown = function KeyPress(e) {
 }
 
 // ==================== Recommendations ====================
-const init_rec = "Press tab to enter the table. Navigate left and right through column headers to see summary for each column.<br>"; // initial recommendation will be invoked pressing ANY NON-TAB key
+const init_rec = "Press tab twice to enter the table. Navigate left and right through column headers to see summary for each column.<br>"; // initial recommendation will be invoked pressing ANY NON-TAB key
 const header_rec = "Try: <br>1. Filter current column by pressing F.<br>2. Sort current column by pressing S.<br>3. Lock current column by pressing L.<br>";
 const header_key_rec = "Try: <br>1. Filter current column by pressing F.<br>2. Sort current column by pressing S.<br>";
 const keyheader_rec = "Try: <br>1. Filter current column by pressing F.<br>2. Sort current column by pressing S.<br>";
@@ -419,7 +419,7 @@ function refreshAttributes() {
     console.log("dataset not available.");
   }
 
-  document.getElementById('summary').innerHTML = tbDes + " To enter the table, press tab key. Navigate the table with the arrow keys and press the question mark (or forward slash) key for recommendations about next steps.";
+  document.getElementById('summary').innerHTML = tbDes + " To enter the table, press tab key twice. Navigate the table with the arrow keys and press the question mark (or forward slash) key for recommendations about next steps.";
 }
 
 
